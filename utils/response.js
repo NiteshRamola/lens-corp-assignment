@@ -1,0 +1,29 @@
+exports.badRequestErrorResponse = (res, msg) => {
+  logger.log(`Bad Request Error: ${msg}`);
+
+  return res.status(400).json({
+    success: false,
+    msg,
+  });
+};
+
+exports.unauthorizedErrorResponse = (res, msg) => {
+  logger.log(`Unauthorized Request Error: ${msg}`);
+
+  return res.status(401).json({
+    success: false,
+    msg,
+  });
+};
+
+exports.internalServerErrorResponse = (res, error) => {
+  logger.log(`Internal Server Error: ${error}`, 'error');
+
+  return res.status(500).json({ success: false, msg: error.message });
+};
+
+exports.successResponse = (res, msg, data) => {
+  logger.log(`Api Success: ${msg}`);
+
+  return res.status({ success: true, msg, data });
+};
