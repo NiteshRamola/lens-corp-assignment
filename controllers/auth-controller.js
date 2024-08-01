@@ -5,8 +5,9 @@ const {
   badRequestErrorResponse,
   internalServerErrorResponse,
 } = require('../utils/response');
+const redis = require('../config/redis.config');
 
-const sendToken = (user, statusCode, res) => {
+const sendToken = async (res, user, msg) => {
   const token = user.getSignedJwtToken();
   const refreshToken = user.getSignedJwtRefreshToken();
 
@@ -17,17 +18,17 @@ const sendToken = (user, statusCode, res) => {
     maxAge: 60 * 60 * 1000,
   });
 
-  res.cookie('refreshToken', token, {
+  res.cookie('refreshToken', refreshToken, {
     httpOnly: true,
     sameSite: 'None',
     secure: true,
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 
-  successResponse(res, 'User created successfully', {
-    user,
-    token,
-    refreshToken,
+  await redis.set(refreshToken, user._id, 'EX', 7 * 24 * 60 * 60);
+
+  successResponse(res, msg, {
+    user: { _id: user._id, email: user._email, username: user._username },
   });
 };
 
@@ -51,7 +52,43 @@ exports.register = async (req, res) => {
       password,
     });
 
-    sendToken(user, 201, res);
+    sendToken(res, user, 'User created successfully');
+  } catch (error) {
+    internalServerErrorResponse(res, error);
+  }
+};
+
+exports.login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) {
+      return badRequestErrorResponse(res, 'Invalid credentials');
+    }
+
+    const isMatch = await user.matchPassword(password);
+    if (!isMatch) {
+      return badRequestErrorResponse(res, 'Invalid credentials');
+    }
+
+    sendToken(res, user, 'Login success');
+  } catch (error) {
+    internalServerErrorResponse(res, error);
+  }
+};
+
+exports.logout = async (req, res) => {
+  try {
+    const { refreshToken } = req.cookies;
+
+    if (refreshToken) {
+      await redis.del(refreshToken);
+    }
+
+    res.clearCookie('token');
+    res.clearCookie('refreshToken');
+
+    successResponse(res, 'Logout success');
   } catch (error) {
     internalServerErrorResponse(res, error);
   }

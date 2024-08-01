@@ -8,6 +8,7 @@ const routes = require('./routes');
 const Logger = require('./utils/winston');
 const package = require('./package.json');
 const exitHandler = require('./utils/exitHandler');
+const cookieParser = require('cookie-parser');
 
 const app = express();
 
@@ -20,6 +21,7 @@ app.use(cors());
 app.use(helmet());
 app.use(morgan('dev'));
 app.use(express.json());
+app.use(cookieParser());
 
 const limiter = rateLimit({
   windowMs: 60 * 1000,
