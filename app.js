@@ -9,6 +9,8 @@ const Logger = require('./utils/winston');
 const package = require('./package.json');
 const exitHandler = require('./utils/exitHandler');
 const cookieParser = require('cookie-parser');
+const swagger = require('./utils/swagger');
+const User = require('./models/user-model');
 
 const app = express();
 
@@ -23,12 +25,23 @@ app.use(morgan('dev'));
 app.use(express.json());
 app.use(cookieParser());
 
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(async () => {
+    logger.log('Connected to MongoDB');
+    const user = await User.countDocuments();
+    console.log('User count:', user);
+  })
+  .catch((err) => logger.log(`Error connecting to MongoDB: ${err}`, 'error'));
+
 const limiter = rateLimit({
   windowMs: 60 * 1000,
   max: 100,
 });
 
 app.use(limiter);
+
+swagger(app);
 
 app.use('/api', routes);
 
@@ -40,18 +53,13 @@ app.get('/health', (req, res) => {
   });
 });
 
+app.use((err, req, res, next) => {
+  res.status(500).json({ success: false, message: 'Server error' });
+});
+
 process.on('uncaughtException', exitHandler(1, 'Unexpected Error'));
 process.on('unhandledRejection', exitHandler(1, 'Unhandled Promise'));
 process.on('SIGTERM', exitHandler(0, 'SIGTERM'));
 process.on('SIGINT', exitHandler(0, 'SIGINT'));
-
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => logger.log('Connected to MongoDB'))
-  .catch((err) => logger.log(`Error connecting to MongoDB: ${err}`, 'error'));
-
-app.use((err, req, res, next) => {
-  res.status(500).json({ success: false, message: 'Server error' });
-});
 
 module.exports = app;

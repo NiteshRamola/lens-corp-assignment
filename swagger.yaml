@@ -1,0 +1,187 @@
+openapi: 3.0.0
+info:
+  title: Task Management API
+  description: API documentation for the Task Management system
+  version: 1.0.0
+  contact:
+    name: Developer
+servers:
+  - url: http://localhost:5000
+tags:
+  - name: Health
+    description: Health Check
+  - name: Auth
+    description: Authentication and Authorization
+  - name: User
+    description: User Management
+  - name: Task
+    description: Task Management
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health Check
+      responses:
+        '200':
+          description: Success
+  /api/auth/register:
+    post:
+      tags:
+        - Auth
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - email
+                - password
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '201':
+          description: User registered successfully
+        '400':
+          description: Bad request
+        '500':
+          description: Server error
+  /api/auth/login:
+    post:
+      tags:
+        - Auth
+      summary: Login a user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: User logged in successfully
+          headers:
+            Set-Cookie:
+              description: HTTP-only cookies with JWT access and refresh tokens
+              schema:
+                type: string
+                example: |
+                  token=jwtAccessToken; HttpOnly; Path=/; Secure
+                  refreshToken=jwtRefreshToken; HttpOnly; Path=/; Secure
+        '400':
+          description: Invalid credentials
+        '500':
+          description: Server error
+  /api/auth/logout:
+    post:
+      tags:
+        - Auth
+      summary: Logout User
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Success
+        '401':
+          description: Unauthorized
+        '500':
+          description: Server error
+  /api/user/profile:
+    get:
+      tags:
+        - User
+      summary: Get user profile
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Success
+        '401':
+          description: Unauthorized
+        '500':
+          description: Server error
+  /api/user/getUserList:
+    get:
+      tags:
+        - User
+      summary: Get list of users
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: query
+          name: search
+          schema:
+            type: string
+          description: Search term for filtering users
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+          description: Number of users to return per page
+        - in: query
+          name: sort
+          schema:
+            type: string
+          description: Sort order of the users
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+          description: Page number to return
+        - in: query
+          name: role
+          schema:
+            type: string
+          description: Role to filter users by
+      responses:
+        '200':
+          description: Success
+        '401':
+          description: Unauthorized
+        '500':
+          description: Server error
+  /api/user/getUserById/{id}:
+    get:
+      tags:
+        - User
+      summary: Get user by ID
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: ID of the user to retrieve
+      responses:
+        '200':
+          description: Success
+        '401':
+          description: Unauthorized
+        '500':
+          description: Server error
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: token

@@ -28,7 +28,12 @@ const sendToken = async (res, user, msg) => {
   await redis.set(refreshToken, user._id, 'EX', 7 * 24 * 60 * 60);
 
   successResponse(res, msg, {
-    user: { _id: user._id, email: user._email, username: user._username },
+    user: {
+      _id: user._id,
+      email: user.email,
+      username: user.username,
+      role: user.role,
+    },
   });
 };
 
@@ -61,7 +66,9 @@ exports.register = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).select(
+      '_id email password username role',
+    );
     if (!user) {
       return badRequestErrorResponse(res, 'Invalid credentials');
     }

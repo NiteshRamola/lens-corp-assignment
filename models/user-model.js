@@ -1,12 +1,19 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const { USER_ROLES } = require('../constants/user-constant');
 
 const UserSchema = new mongoose.Schema(
   {
-    username: { type: String, required: true, unique: true },
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
-    role: { type: String, default: 'user', enum: ['admin', 'manager', 'user'] },
+    username: { type: String, required: true, unique: true, index: true },
+    email: { type: String, required: true, unique: true, index: true },
+    password: { type: String, required: true, select: false },
+    role: {
+      type: String,
+      default: USER_ROLES.USER,
+      enum: Object.values(USER_ROLES),
+      index: true,
+    },
   },
   { timestamps: true },
 );
@@ -24,7 +31,7 @@ UserSchema.methods.matchPassword = async function (password) {
 
 UserSchema.methods.getSignedJwtToken = function () {
   return jwt.sign(
-    { _id: this._id, email: this.email },
+    { _id: this._id, email: this.email, role: this.role },
     process.env.JWT_SECRET,
     {
       expiresIn: process.env.JWT_EXPIRE,
@@ -33,14 +40,13 @@ UserSchema.methods.getSignedJwtToken = function () {
 };
 
 UserSchema.methods.getSignedJwtRefreshToken = function () {
-  this.refreshToken = jwt.sign(
-    { _id: this._id, email: this.email },
+  return jwt.sign(
+    { _id: this._id, email: this.email, role: this.role },
     process.env.JWT_REFRESH_SECRET,
     {
       expiresIn: process.env.JWT_REFRESH_EXPIRE,
     },
   );
-  return this.refreshToken;
 };
 
 module.exports = mongoose.model('User', UserSchema);

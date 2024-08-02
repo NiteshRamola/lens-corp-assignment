@@ -7,10 +7,10 @@ exports.badRequestErrorResponse = (res, msg) => {
   });
 };
 
-exports.unauthorizedErrorResponse = (res, msg) => {
+exports.unauthorizedErrorResponse = (res, msg, statusCode = 401) => {
   logger.log(`Unauthorized Request Error: ${msg}`);
 
-  return res.status(401).json({
+  return res.status(statusCode).json({
     success: false,
     msg,
   });
@@ -25,5 +25,5 @@ exports.internalServerErrorResponse = (res, error) => {
 exports.successResponse = (res, msg, data) => {
   logger.log(`Api Success: ${msg}`);
 
-  return res.status({ success: true, msg, data });
+  return res.json({ success: true, msg, data });
 };
