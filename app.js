@@ -11,6 +11,7 @@ const exitHandler = require('./utils/exitHandler');
 const cookieParser = require('cookie-parser');
 const swagger = require('./utils/swagger');
 const User = require('./models/user-model');
+const { createAdminOnServerStart } = require('./controllers/auth-controller');
 
 const app = express();
 
@@ -29,8 +30,7 @@ mongoose
   .connect(process.env.MONGO_URI)
   .then(async () => {
     logger.log('Connected to MongoDB');
-    const user = await User.countDocuments();
-    console.log('User count:', user);
+    createAdminOnServerStart();
   })
   .catch((err) => logger.log(`Error connecting to MongoDB: ${err}`, 'error'));
 

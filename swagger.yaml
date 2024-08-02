@@ -102,6 +102,37 @@ paths:
           description: Unauthorized
         '500':
           description: Server error
+  /api/auth/createManager:
+    post:
+      tags:
+        - Auth
+      summary: Create a new manager
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - email
+                - password
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '201':
+          description: Manager registered successfully
+        '401':
+          description: Unauthorized
+        '400':
+          description: Bad request
+        '500':
+          description: Server error
   /api/user/profile:
     get:
       tags:

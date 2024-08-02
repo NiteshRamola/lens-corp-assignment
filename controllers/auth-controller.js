@@ -6,6 +6,7 @@ const {
   internalServerErrorResponse,
 } = require('../utils/response');
 const redis = require('../config/redis.config');
+const { USER_ROLES } = require('../constants/user-constant');
 
 const sendToken = async (res, user, msg) => {
   const token = user.getSignedJwtToken();
@@ -37,27 +38,76 @@ const sendToken = async (res, user, msg) => {
   });
 };
 
-exports.register = async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return badRequestErrorResponse(res, errors.array());
-  }
-
-  const { username, email, password } = req.body;
-
+const createUser = async (email, username, password, role) => {
   try {
-    const existingUser = await User.countDocuments({ email });
-    if (existingUser) {
-      return badRequestErrorResponse(res, 'User already exists');
+    const userExists = await User.findOne({ $or: { email, username } }).select({
+      _id: 0,
+      email: 1,
+      username: 1,
+    });
+    if (userExists) {
+      const errorMessage =
+        userExists.email === email
+          ? 'User with same email already exists'
+          : 'Username already taken';
+
+      return { success: false, errorMessage };
     }
 
     const user = await User.create({
       username,
       email,
       password,
+      role,
     });
 
-    sendToken(res, user, 'User created successfully');
+    return { success: true, user };
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
+exports.createAdminOnServerStart = async () => {
+  try {
+    const admin = await User.countDocuments({ role: USER_ROLES.ADMIN });
+
+    if (!admin) {
+      await User.create({
+        username: 'Admin',
+        email: 'admin@gmail.com',
+        password: 'Admin@123',
+        role: USER_ROLES.ADMIN,
+      });
+
+      logger.log('Admin created successfully.');
+
+      return true;
+    }
+
+    logger.log('Admin already exists');
+
+    return true;
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
+exports.register = async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return badRequestErrorResponse(res, errors.array());
+    }
+
+    const { username, email, password } = req.body;
+
+    const createdUser = await createUser(email, username, password);
+
+    if (!createdUser.success) {
+      return badRequestErrorResponse(res, createdUser.errorMessage);
+    }
+
+    sendToken(res, createdUser.user, 'User created successfully');
   } catch (error) {
     internalServerErrorResponse(res, error);
   }
@@ -96,6 +146,32 @@ exports.logout = async (req, res) => {
     res.clearCookie('refreshToken');
 
     successResponse(res, 'Logout success');
+  } catch (error) {
+    internalServerErrorResponse(res, error);
+  }
+};
+
+exports.createManager = async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return badRequestErrorResponse(res, errors.array());
+    }
+
+    const { username, email, password } = req.body;
+
+    const createdUser = await createUser(
+      email,
+      username,
+      password,
+      USER_ROLES.MANAGER,
+    );
+
+    if (!createdUser.success) {
+      return badRequestErrorResponse(res, createdUser.errorMessage);
+    }
+
+    successResponse(res, 'Manager created successfully');
   } catch (error) {
     internalServerErrorResponse(res, error);
   }

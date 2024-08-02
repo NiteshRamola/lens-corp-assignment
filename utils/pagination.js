@@ -24,7 +24,7 @@ exports.pagination = async (
     result.totalPage = Math.ceil(total / limit);
     result.totalDocuments = total;
     return result;
-  } catch (err) {
-    console.log('Error from pagination function =>', err);
+  } catch (error) {
+    logger.log(`Error from pagination function => ${error}`, 'error');
   }
 };
