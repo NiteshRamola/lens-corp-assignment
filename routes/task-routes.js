@@ -7,6 +7,7 @@ const {
   validateGetTaskList,
   validateAssignUserToTask,
   validateUnassignUserFromTask,
+  validateGetTaskAnalytics,
 } = require('../middlewares/validations/task-validation');
 const tokenVerify = require('../middlewares/auth.middleware');
 const roleMiddleware = require('../middlewares/role-middleware');
@@ -67,4 +68,11 @@ router.post(
   TaskController.unassignUserFromTask,
 );
 
+router.get(
+  '/getTaskAnalytics',
+  tokenVerify,
+  validateGetTaskAnalytics,
+  validationErrorHandler,
+  TaskController.getTaskAnalytics,
+);
 module.exports = router;

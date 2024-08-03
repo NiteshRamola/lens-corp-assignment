@@ -115,3 +115,14 @@ exports.validateAssignUserToTask = [
 exports.validateUnassignUserFromTask = [
   body('taskId').isMongoId().withMessage('Valid task id is required'),
 ];
+
+exports.validateGetTaskAnalytics = [
+  query('userId')
+    .optional()
+    .isMongoId()
+    .withMessage('Valid user id is required'),
+  query('managerId')
+    .optional()
+    .isMongoId()
+    .withMessage('Valid manager id is required'),
+];

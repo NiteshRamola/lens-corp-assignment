@@ -1,4 +1,5 @@
 const Task = require('../models/task-model');
+const mongoose = require('mongoose');
 const {
   internalServerErrorResponse,
   successResponse,
@@ -77,9 +78,10 @@ exports.updateTask = async (req, res) => {
     }
 
     const deleteCache = redis.deleteKeysByPattern(`task_list_*`);
+    const deleteAnalyticsCache = redis.deleteKeysByPattern(`task_analytics_*`);
     const updateCache = redis.setKey(`task_${id}`, updatedTask, 60 * 60);
 
-    await Promise.allSettled([deleteCache, updateCache]);
+    await Promise.allSettled([deleteCache, deleteAnalyticsCache, updateCache]);
 
     if (req.user.role === USER_ROLES.USER) {
       sendEvent('task-updates', updatedTask?.createdBy?._id?.toString(), {
@@ -239,9 +241,10 @@ exports.assignUserToTask = async (req, res) => {
     }
 
     const deleteCache = redis.deleteKeysByPattern(`task_list_*`);
+    const deleteAnalyticsCache = redis.deleteKeysByPattern(`task_analytics_*`);
     const updateCache = redis.setKey(`task_${taskId}`, task, 60 * 60);
 
-    await Promise.allSettled([deleteCache, updateCache]);
+    await Promise.allSettled([deleteCache, deleteAnalyticsCache, updateCache]);
 
     sendEvent('task-updates', userId.toString(), {
       type: 'newTask',
@@ -282,9 +285,10 @@ exports.unassignUserFromTask = async (req, res) => {
     ).populate([{ path: 'createdBy', select: 'username email' }]);
 
     const deleteCache = redis.deleteKeysByPattern(`task_list_*`);
+    const deleteAnalyticsCache = redis.deleteKeysByPattern(`task_analytics_*`);
     const updateCache = redis.setKey(`task_${taskId}`, task, 60 * 60);
 
-    await Promise.allSettled([deleteCache, updateCache]);
+    await Promise.allSettled([deleteCache, deleteAnalyticsCache, updateCache]);
 
     sendEvent('task-updates', taskExists?.assignedTo?.toString(), {
       type: 'taskRemoved',
@@ -293,6 +297,92 @@ exports.unassignUserFromTask = async (req, res) => {
     });
 
     successResponse(res, 'User unassigned from task successfully');
+  } catch (error) {
+    internalServerErrorResponse(res, error);
+  }
+};
+
+exports.getTaskAnalytics = async (req, res) => {
+  try {
+    const { userId, managerId } = req.query;
+
+    const cacheKey = `task_analytics_${JSON.stringify(req.query)}`;
+    const cachedData = await redis.getKey(cacheKey);
+
+    if (cachedData.success) {
+      return successResponse(res, 'Task analytics fetched', cachedData.data);
+    }
+
+    const query = {};
+
+    if (userId) {
+      query.assignedTo = new mongoose.Types.ObjectId(userId);
+    }
+
+    if (managerId) {
+      query.createdBy = new mongoose.Types.ObjectId(managerId);
+    }
+
+    if (req.user.role === USER_ROLES.USER) {
+      query.assignedTo = new mongoose.Types.ObjectId(req.user._id);
+    }
+
+    if (req.user.role === USER_ROLES.MANAGER) {
+      query.createdBy = new mongoose.Types.ObjectId(req.user._id);
+    }
+
+    const [data] = await Task.aggregate([
+      { $match: query },
+      {
+        $facet: {
+          totalTasks: [{ $count: 'count' }],
+          completedTasks: [
+            { $match: { status: TASK_STATUS.COMPLETED } },
+            { $count: 'count' },
+          ],
+          pendingTasks: [
+            { $match: { status: TASK_STATUS.PENDING } },
+            { $count: 'count' },
+          ],
+          inProgressTasks: [
+            { $match: { status: TASK_STATUS.IN_PROGRESS } },
+            { $count: 'count' },
+          ],
+          overdueTasks: [
+            {
+              $match: {
+                status: { $in: [TASK_STATUS.PENDING, TASK_STATUS.IN_PROGRESS] },
+                dueDate: { $lt: new Date() },
+              },
+            },
+            { $count: 'count' },
+          ],
+        },
+      },
+      {
+        $project: {
+          totalTasks: {
+            $ifNull: [{ $arrayElemAt: ['$totalTasks.count', 0] }, 0],
+          },
+          completedTasks: {
+            $ifNull: [{ $arrayElemAt: ['$completedTasks.count', 0] }, 0],
+          },
+          pendingTasks: {
+            $ifNull: [{ $arrayElemAt: ['$pendingTasks.count', 0] }, 0],
+          },
+          inProgressTasks: {
+            $ifNull: [{ $arrayElemAt: ['$inProgressTasks.count', 0] }, 0],
+          },
+          overdueTasks: {
+            $ifNull: [{ $arrayElemAt: ['$overdueTasks.count', 0] }, 0],
+          },
+        },
+      },
+    ]);
+
+    await redis.setKey(cacheKey, data, 60 * 60);
+
+    successResponse(res, 'Task analytics fetched', data);
   } catch (error) {
     internalServerErrorResponse(res, error);
   }

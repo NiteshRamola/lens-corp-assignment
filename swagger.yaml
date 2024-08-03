@@ -487,27 +487,27 @@ paths:
           description: Bad request
         '500':
           description: Server error
-  /api/task/unassignUserFromTask:
-    post:
+  /api/task/getTaskAnalytics:
+    get:
       tags:
         - Task
-      summary: Unassign a user from a task
+      summary: Get Task Analytics
       security:
         - cookieAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - taskId
-              properties:
-                taskId:
-                  type: string
+      parameters:
+        - in: query
+          name: userId
+          schema:
+            type: string
+          description: Filter task analytics by user ID
+        - in: query
+          name: managerId
+          schema:
+            type: string
+          description: Filter task analytics by manager ID
       responses:
         '200':
-          description: User unassigned from task successfully
+          description: Success
         '401':
           description: Unauthorized
         '400':
