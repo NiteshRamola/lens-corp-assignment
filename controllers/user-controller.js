@@ -1,3 +1,4 @@
+const { validationResult } = require('express-validator');
 const { USER_ROLES } = require('../constants/user-constant');
 const User = require('../models/user-model');
 const { pagination } = require('../utils/pagination');
@@ -8,7 +9,9 @@ const {
 
 exports.getProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id);
+    const user = await User.findById(req.user._id).populate([
+      { path: 'managerId', select: 'username email' },
+    ]);
 
     successResponse(res, 'User fetched', user);
   } catch (error) {
@@ -19,7 +22,16 @@ exports.getProfile = async (req, res) => {
 exports.getUserById = async (req, res) => {
   try {
     const { id } = req.params;
-    const user = await User.findById(id);
+
+    const query = { _id: id };
+
+    if (req.user.role === USER_ROLES.MANAGER) {
+      query.managerId = req.user._id;
+    }
+
+    const user = await User.findOne(query).populate([
+      { path: 'managerId', select: 'username email' },
+    ]);
 
     if (!user) {
       return badRequestErrorResponse(res, 'User not found with given id.');
@@ -33,7 +45,7 @@ exports.getUserById = async (req, res) => {
 
 exports.getUserList = async (req, res) => {
   try {
-    const { search, limit, sort, page, role } = req.query;
+    const { search, limit, sort, page, role, managerId } = req.query;
 
     const query = {
       role: { $ne: USER_ROLES.ADMIN },
@@ -41,6 +53,14 @@ exports.getUserList = async (req, res) => {
 
     if (role) {
       query.role = role;
+    }
+
+    if (managerId) {
+      query.managerId = managerId === 'null' ? null : managerId;
+    }
+
+    if (req.user.role === USER_ROLES.MANAGER) {
+      query.managerId = req.user._id;
     }
 
     if (search) {
@@ -55,6 +75,67 @@ exports.getUserList = async (req, res) => {
     const data = await pagination(User, query, page, limit, '', sort);
 
     successResponse(res, 'Users fetched', data);
+  } catch (error) {
+    internalServerErrorResponse(res, error);
+  }
+};
+
+exports.assignManager = async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return badRequestErrorResponse(res, errors.array());
+    }
+
+    const { userId, managerId } = req.body;
+
+    const user = await User.countDocuments({
+      _id: userId,
+      managerId: { $exists: false },
+    });
+    if (!user) {
+      return badRequestErrorResponse(
+        res,
+        'Either user not exists or manager is already assigned.',
+      );
+    }
+
+    const manager = await User.countDocuments({ _id: managerId });
+    if (!manager) {
+      return badRequestErrorResponse(res, 'Manager not found with given id.');
+    }
+
+    await User.updateOne({ _id: userId }, { $set: { managerId } });
+
+    successResponse(res, 'Manager assigned successfully');
+  } catch (error) {
+    internalServerErrorResponse(res, error);
+  }
+};
+
+exports.unassignManager = async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return badRequestErrorResponse(res, errors.array());
+    }
+
+    const { userId } = req.body;
+
+    const user = await User.countDocuments({
+      _id: userId,
+      managerId: { $exists: true },
+    });
+    if (!user) {
+      return badRequestErrorResponse(
+        res,
+        'Either user not exists or manager is not assigned.',
+      );
+    }
+
+    await User.updateOne({ _id: userId }, { $unset: { managerId: '' } });
+
+    successResponse(res, 'Manager unassigned successfully');
   } catch (error) {
     internalServerErrorResponse(res, error);
   }

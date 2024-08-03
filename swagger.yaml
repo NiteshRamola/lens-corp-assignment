@@ -181,7 +181,12 @@ paths:
           name: role
           schema:
             type: string
-          description: Role to filter users by
+          description: Filter user by its role
+        - in: query
+          name: managerId
+          schema:
+            type: string
+          description: Filter user by its manager
       responses:
         '200':
           description: Success
@@ -208,6 +213,66 @@ paths:
           description: Success
         '401':
           description: Unauthorized
+        '500':
+          description: Server error
+  /api/user/assignManager:
+    post:
+      tags:
+        - User
+      summary: Assign a manager to a user
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userId
+                - managerId
+              properties:
+                userId:
+                  type: string
+                  description: Valid user ID
+                managerId:
+                  type: string
+                  description: Valid manager ID
+      responses:
+        '200':
+          description: Manager assigned successfully
+        '401':
+          description: Unauthorized
+        '400':
+          description: Bad request
+        '500':
+          description: Server error
+  /api/user/unassignManager:
+    post:
+      tags:
+        - User
+      summary: Unassign a manager from a user
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userId
+              properties:
+                userId:
+                  type: string
+                  description: Valid user ID
+      responses:
+        '200':
+          description: Manager unassigned successfully
+        '401':
+          description: Unauthorized
+        '400':
+          description: Bad request
         '500':
           description: Server error
 components:

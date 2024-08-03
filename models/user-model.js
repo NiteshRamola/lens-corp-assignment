@@ -14,6 +14,7 @@ const UserSchema = new mongoose.Schema(
       enum: Object.values(USER_ROLES),
       index: true,
     },
+    managerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   },
   { timestamps: true },
 );
