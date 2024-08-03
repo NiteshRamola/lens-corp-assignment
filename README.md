@@ -4,6 +4,16 @@ This project is built with Node.js and Express, with MongoDB for the database an
 
 ### Demo Link - [https://lens-assignment.niteshramola.in/api-docs](https://lens-assignment.niteshramola.in/api-docs)
 
+```sh
+#Testing credentials
+
+Role     Email             Password
+
+Admin    admin@gmail.com   Admin@123
+Manager  nitesh@gmail.com  string
+User     ramola@gmail.com  string
+```
+
 ## Table of Contents
 
 - [Getting Started](#getting-started)
