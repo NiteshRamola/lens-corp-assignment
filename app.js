@@ -22,7 +22,15 @@ initializeSocket(server);
 
 require('dotenv').config();
 
-app.use(cors());
+app.use(
+  cors({
+    origin: 'https://niteshramola.in',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+  }),
+);
+
 app.use(helmet());
 app.use(morgan('dev'));
 app.use(express.json());

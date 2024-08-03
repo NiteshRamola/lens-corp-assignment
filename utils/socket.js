@@ -6,7 +6,9 @@ let io;
 function initializeSocket(server) {
   io = socketIo(server, {
     cors: {
-      origin: '*',
+      origin: 'https://niteshramola.in',
+      methods: ['GET', 'POST'],
+      credentials: true,
     },
   });
 

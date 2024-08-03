@@ -40,7 +40,7 @@ module.exports = async (req, res, next) => {
 
       res.cookie('token', newAccessToken, {
         httpOnly: true,
-        sameSite: 'None',
+        sameSite: 'Strict',
         secure: true,
         maxAge: 60 * 60 * 1000,
       });

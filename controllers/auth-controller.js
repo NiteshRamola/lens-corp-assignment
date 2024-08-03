@@ -13,14 +13,14 @@ const sendToken = async (res, user, msg) => {
 
   res.cookie('token', token, {
     httpOnly: true,
-    sameSite: 'None',
+    sameSite: 'Strict',
     secure: true,
     maxAge: 60 * 60 * 1000,
   });
 
   res.cookie('refreshToken', refreshToken, {
     httpOnly: true,
-    sameSite: 'None',
+    sameSite: 'Strict',
     secure: true,
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
