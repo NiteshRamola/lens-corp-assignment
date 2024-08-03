@@ -7,13 +7,13 @@ const rateLimit = require('express-rate-limit');
 const routes = require('./routes');
 const Logger = require('./utils/winston');
 const package = require('./package.json');
-const exitHandler = require('./utils/exitHandler');
 const cookieParser = require('cookie-parser');
 const swagger = require('./utils/swagger');
-const User = require('./models/user-model');
 const { createAdminOnServerStart } = require('./controllers/auth-controller');
+const http = require('http');
 
 const app = express();
+const server = http.createServer(app);
 
 require('dotenv').config();
 
@@ -57,9 +57,11 @@ app.use((err, req, res, next) => {
   res.status(500).json({ success: false, message: 'Server error' });
 });
 
+const exitHandler = require('./utils/exitHandler')(server);
+
 process.on('uncaughtException', exitHandler(1, 'Unexpected Error'));
 process.on('unhandledRejection', exitHandler(1, 'Unhandled Promise'));
 process.on('SIGTERM', exitHandler(0, 'SIGTERM'));
 process.on('SIGINT', exitHandler(0, 'SIGINT'));
 
-module.exports = app;
+module.exports = server;

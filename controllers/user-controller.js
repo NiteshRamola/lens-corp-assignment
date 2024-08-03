@@ -82,11 +82,6 @@ exports.getUserList = async (req, res) => {
 
 exports.assignManager = async (req, res) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return badRequestErrorResponse(res, errors.array());
-    }
-
     const { userId, managerId } = req.body;
 
     const user = await User.countDocuments({
@@ -115,11 +110,6 @@ exports.assignManager = async (req, res) => {
 
 exports.unassignManager = async (req, res) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return badRequestErrorResponse(res, errors.array());
-    }
-
     const { userId } = req.body;
 
     const user = await User.countDocuments({

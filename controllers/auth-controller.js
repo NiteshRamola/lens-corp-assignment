@@ -26,7 +26,7 @@ const sendToken = async (res, user, msg) => {
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 
-  await redis.set(refreshToken, user._id, 'EX', 7 * 24 * 60 * 60);
+  await redis.setKey(refreshToken, user._id, 7 * 24 * 60 * 60);
 
   successResponse(res, msg, {
     user: {
@@ -94,11 +94,6 @@ exports.createAdminOnServerStart = async () => {
 
 exports.register = async (req, res) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return badRequestErrorResponse(res, errors.array());
-    }
-
     const { username, email, password } = req.body;
 
     const createdUser = await createUser(email, username, password);
@@ -139,7 +134,7 @@ exports.logout = async (req, res) => {
     const { refreshToken } = req.cookies;
 
     if (refreshToken) {
-      await redis.del(refreshToken);
+      await redis.deleteKey(refreshToken);
     }
 
     res.clearCookie('token');
@@ -153,11 +148,6 @@ exports.logout = async (req, res) => {
 
 exports.createManager = async (req, res) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return badRequestErrorResponse(res, errors.array());
-    }
-
     const { username, email, password } = req.body;
 
     const createdUser = await createUser(

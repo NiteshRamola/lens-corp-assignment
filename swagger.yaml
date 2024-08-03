@@ -6,7 +6,7 @@ info:
   contact:
     name: Developer
 servers:
-  - url: http://localhost:5000
+  - url: http://localhost:5001
 tags:
   - name: Health
     description: Health Check
@@ -269,6 +269,236 @@ paths:
       responses:
         '200':
           description: Manager unassigned successfully
+        '401':
+          description: Unauthorized
+        '400':
+          description: Bad request
+        '500':
+          description: Server error
+  /api/task/create:
+    post:
+      tags:
+        - Task
+      summary: Create a new task
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - description
+                - dueDate
+                - priority
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                dueDate:
+                  type: string
+                  format: date-time
+                priority:
+                  type: string
+                  enum: [LOW, MEDIUM, HIGH]
+                userId:
+                  type: string
+      responses:
+        '201':
+          description: Task created successfully
+        '401':
+          description: Unauthorized
+        '400':
+          description: Bad request
+        '500':
+          description: Server error
+  /api/task/updateTask/{id}:
+    put:
+      tags:
+        - Task
+      summary: Update a task
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: ID of the task to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                dueDate:
+                  type: string
+                  format: date-time
+                priority:
+                  type: string
+                  enum: [LOW, MEDIUM, HIGH]
+                status:
+                  type: string
+                  enum: [PENDING, IN_PROGRESS, COMPLETED]
+                userId:
+                  type: string
+      responses:
+        '200':
+          description: Task updated successfully
+        '401':
+          description: Unauthorized
+        '400':
+          description: Bad request
+        '500':
+          description: Server error
+  /api/task/getTaskById/{id}:
+    get:
+      tags:
+        - Task
+      summary: Get a task by ID
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: ID of the task to retrieve
+      responses:
+        '200':
+          description: Success
+        '401':
+          description: Unauthorized
+        '400':
+          description: Bad request
+        '500':
+          description: Server error
+  /api/task/getTaskList:
+    get:
+      tags:
+        - Task
+      summary: Get list of tasks
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: query
+          name: search
+          schema:
+            type: string
+          description: Search term for filtering tasks
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+          description: Number of tasks to return per page
+        - in: query
+          name: sort
+          schema:
+            type: string
+          description: Sort order of the tasks
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+          description: Page number to return
+        - in: query
+          name: userId
+          schema:
+            type: string
+          description: Filter tasks by user ID
+        - in: query
+          name: managerId
+          schema:
+            type: string
+          description: Filter tasks by manager ID
+        - in: query
+          name: status
+          schema:
+            type: string
+          description: Filter tasks by status
+        - in: query
+          name: priority
+          schema:
+            type: string
+          description: Filter tasks by priority
+        - in: query
+          name: dueDate
+          schema:
+            type: string
+            format: date-time
+          description: Filter tasks by due date
+      responses:
+        '200':
+          description: Success
+        '401':
+          description: Unauthorized
+        '400':
+          description: Bad request
+        '500':
+          description: Server error
+  /api/task/assignUserToTask:
+    post:
+      tags:
+        - Task
+      summary: Assign a user to a task
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userId
+                - taskId
+              properties:
+                userId:
+                  type: string
+                taskId:
+                  type: string
+      responses:
+        '200':
+          description: User assigned to task successfully
+        '401':
+          description: Unauthorized
+        '400':
+          description: Bad request
+        '500':
+          description: Server error
+  /api/task/unassignUserFromTask:
+    post:
+      tags:
+        - Task
+      summary: Unassign a user from a task
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - taskId
+              properties:
+                taskId:
+                  type: string
+      responses:
+        '200':
+          description: User unassigned from task successfully
         '401':
           description: Unauthorized
         '400':

@@ -1,5 +1,4 @@
-module.exports = (server, options = { coredump: false, timeout: 500 }) => {
-  // Exit function
+const exitHandler = (server, options = { coredump: false, timeout: 500 }) => {
   const exit = (code) => {
     options.coredump ? process.abort() : process.exit(code);
   };
@@ -10,8 +9,14 @@ module.exports = (server, options = { coredump: false, timeout: 500 }) => {
     }
 
     // Attempt a graceful shutdown
-    logger.log(`Server shutting down with exit code: ${server}`);
-    server.close(exit);
+    logger.log(
+      `Server shutting down with exit code: ${code}, reason: ${reason}`,
+    );
+    server.close(() => {
+      exit(code);
+    });
     setTimeout(exit, options.timeout).unref();
   };
 };
+
+module.exports = exitHandler;

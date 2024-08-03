@@ -3,7 +3,13 @@ const tokenVerify = require('../middlewares/auth.middleware');
 const userController = require('../controllers/user-controller');
 const roleMiddleware = require('../middlewares/role-middleware');
 const { USER_ROLES } = require('../constants/user-constant');
-const { check } = require('express-validator');
+const {
+  validateUserList,
+  validateUserId,
+  validateAssignManager,
+  validateUnassignManager,
+} = require('../middlewares/validations/user-validation');
+const { validationErrorHandler } = require('../utils/response');
 
 const router = express.Router();
 
@@ -13,6 +19,8 @@ router.get(
   '/getUserList',
   tokenVerify,
   roleMiddleware([USER_ROLES.ADMIN, USER_ROLES.MANAGER]),
+  validateUserList,
+  validationErrorHandler,
   userController.getUserList,
 );
 
@@ -20,6 +28,8 @@ router.get(
   '/getUserById/:id',
   tokenVerify,
   roleMiddleware([USER_ROLES.ADMIN, USER_ROLES.MANAGER]),
+  validateUserId,
+  validationErrorHandler,
   userController.getUserById,
 );
 
@@ -27,10 +37,8 @@ router.post(
   '/assignManager',
   tokenVerify,
   roleMiddleware([USER_ROLES.ADMIN]),
-  [
-    check('userId', 'Please include a valid user id').isMongoId(),
-    check('managerId', 'Please include a valid manager id').isMongoId(),
-  ],
+  validateAssignManager,
+  validationErrorHandler,
   userController.assignManager,
 );
 
@@ -38,7 +46,8 @@ router.post(
   '/unassignManager',
   tokenVerify,
   roleMiddleware([USER_ROLES.ADMIN]),
-  [check('userId', 'Please include a valid user id').isMongoId()],
+  validateUnassignManager,
+  validationErrorHandler,
   userController.unassignManager,
 );
 

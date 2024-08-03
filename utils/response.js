@@ -1,3 +1,5 @@
+const { validationResult } = require('express-validator');
+
 exports.badRequestErrorResponse = (res, msg) => {
   logger.log(`Bad Request Error: ${msg}`);
 
@@ -26,4 +28,13 @@ exports.successResponse = (res, msg, data) => {
   logger.log(`Api Success: ${msg}`);
 
   return res.json({ success: true, msg, data });
+};
+
+exports.validationErrorHandler = (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return this.badRequestErrorResponse(res, errors.array());
+  }
+
+  next();
 };

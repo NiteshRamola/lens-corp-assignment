@@ -20,8 +20,8 @@ module.exports = async (req, res, next) => {
     }
 
     try {
-      const id = await redis.get(refreshToken);
-      if (!id) {
+      const data = await redis.getKey(refreshToken);
+      if (!data.success) {
         return unauthorizedErrorResponse(res, 'Access Denied! Token expired');
       }
 

@@ -1,48 +1,44 @@
 const express = require('express');
-const { check } = require('express-validator');
 const authController = require('../controllers/auth-controller');
 const tokenVerify = require('../middlewares/auth.middleware');
 const roleMiddleware = require('../middlewares/role-middleware');
 const { USER_ROLES } = require('../constants/user-constant');
+const {
+  validateRegister,
+  validateLogin,
+  validateCreateManager,
+} = require('../middlewares/validations/auth-validation');
+const { validationErrorHandler } = require('../utils/response');
 
 const router = express.Router();
 
 router.post(
   '/register',
-  [
-    check('username', 'Username is required').not().isEmpty(),
-    check('email', 'Please include a valid email').isEmail(),
-    check('password', 'Password must be 6 or more characters').isLength({
-      min: 6,
-    }),
-  ],
+  validateRegister,
+  validationErrorHandler,
   authController.register,
 );
 
 router.post(
   '/login',
-  [
-    check('email', 'Please include a valid email').isEmail(),
-    check('password', 'Password must be 6 or more characters').isLength({
-      min: 6,
-    }),
-  ],
+  validateLogin,
+  validationErrorHandler,
   authController.login,
 );
 
-router.post('/logout', tokenVerify, authController.logout);
+router.post(
+  '/logout',
+  tokenVerify,
+  validationErrorHandler,
+  authController.logout,
+);
 
 router.post(
   '/createManager',
-  [
-    check('username', 'Username is required').not().isEmpty(),
-    check('email', 'Please include a valid email').isEmail(),
-    check('password', 'Password must be 6 or more characters').isLength({
-      min: 6,
-    }),
-  ],
   tokenVerify,
   roleMiddleware([USER_ROLES.ADMIN]),
+  validateCreateManager,
+  validationErrorHandler,
   authController.createManager,
 );
 
