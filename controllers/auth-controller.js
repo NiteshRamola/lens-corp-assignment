@@ -1,5 +1,4 @@
 const User = require('../models/user-model');
-const { validationResult } = require('express-validator');
 const {
   successResponse,
   badRequestErrorResponse,
@@ -60,6 +59,8 @@ const createUser = async (email, username, password, role) => {
       password,
       role,
     });
+
+    await redis.deleteKeysByPattern('user_list_*');
 
     return { success: true, user };
   } catch (error) {

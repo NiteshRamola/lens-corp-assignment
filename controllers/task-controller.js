@@ -1,4 +1,3 @@
-const { validationResult } = require('express-validator');
 const Task = require('../models/task-model');
 const {
   internalServerErrorResponse,
@@ -239,10 +238,7 @@ exports.unassignUserFromTask = async (req, res) => {
       },
       { $unset: { assignedTo: '' } },
       { new: true },
-    ).populate([
-      { path: 'createdBy', select: 'username email' },
-      { path: 'assignedTo', select: 'username email' },
-    ]);
+    ).populate([{ path: 'createdBy', select: 'username email' }]);
 
     if (!task) {
       return badRequestErrorResponse(
