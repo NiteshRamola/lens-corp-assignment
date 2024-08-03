@@ -9,6 +9,15 @@ exports.badRequestErrorResponse = (res, msg) => {
   });
 };
 
+exports.notFoundErrorResponse = (res, msg) => {
+  logger.log(`Not found error: ${msg}`);
+
+  return res.status(404).json({
+    success: false,
+    msg,
+  });
+};
+
 exports.unauthorizedErrorResponse = (res, msg, statusCode = 401) => {
   logger.log(`Unauthorized Request Error: ${msg}`);
 

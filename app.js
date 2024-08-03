@@ -14,6 +14,7 @@ const swagger = require('./utils/swagger');
 const { createAdminOnServerStart } = require('./controllers/auth-controller');
 const http = require('http');
 const { initializeSocket } = require('./utils/socket');
+const { notFoundErrorResponse } = require('./utils/response');
 
 const app = express();
 const server = http.createServer(app);
@@ -56,6 +57,10 @@ app.get('/health', (req, res) => {
 
 app.use((err, req, res, next) => {
   res.status(500).json({ success: false, message: 'Server error' });
+});
+
+app.use((req, res, next) => {
+  notFoundErrorResponse(res, 'Invalid Endpoint');
 });
 
 const exitHandler = require('./utils/exitHandler')(server);
