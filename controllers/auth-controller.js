@@ -39,7 +39,9 @@ const sendToken = async (res, user, msg) => {
 
 const createUser = async (email, username, password, role) => {
   try {
-    const userExists = await User.findOne({ $or: { email, username } }).select({
+    const userExists = await User.findOne({
+      $or: [{ email: email }, { username: username }],
+    }).select({
       _id: 0,
       email: 1,
       username: 1,

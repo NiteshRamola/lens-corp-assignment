@@ -5,8 +5,19 @@ const { USER_ROLES } = require('../constants/user-constant');
 
 const UserSchema = new mongoose.Schema(
   {
-    username: { type: String, required: true, unique: true, index: true },
-    email: { type: String, required: true, unique: true, index: true },
+    username: {
+      type: String,
+      required: true,
+      unique: true,
+      index: true,
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      index: true,
+    },
     password: { type: String, required: true, select: false },
     role: {
       type: String,
