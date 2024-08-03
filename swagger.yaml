@@ -6,7 +6,14 @@ info:
   contact:
     name: Developer
 servers:
+  - url: https://lens-assignment.niteshramola.in
+    description: Production
+  - url: wss://lens-assignment.niteshramola.in
+    description: Production (Socket.io)
   - url: http://localhost:5001
+    description: Development
+  - url: wss://localhost:5000
+    description: Development (Socket.io)
 tags:
   - name: Health
     description: Health Check
@@ -16,6 +23,8 @@ tags:
     description: User Management
   - name: Task
     description: Task Management
+  - name: Socket
+    description: WebSocket Connections
 paths:
   /health:
     get:
@@ -303,7 +312,7 @@ paths:
                   format: date-time
                 priority:
                   type: string
-                  enum: [LOW, MEDIUM, HIGH]
+                  enum: [low, medium, high]
                 userId:
                   type: string
       responses:
@@ -345,10 +354,10 @@ paths:
                   format: date-time
                 priority:
                   type: string
-                  enum: [LOW, MEDIUM, HIGH]
+                  enum: [low, medium, high]
                 status:
                   type: string
-                  enum: [PENDING, IN_PROGRESS, COMPLETED]
+                  enum: [pending, in_progress, completed]
                 userId:
                   type: string
       responses:
@@ -505,6 +514,25 @@ paths:
           description: Bad request
         '500':
           description: Server error
+  /:
+    get:
+      tags:
+        - Socket
+      summary: Establish a WebSocket connection
+      description: |
+        This endpoint initiates a WebSocket connection using Socket.io. 
+
+        **Authentication:**
+        - The connection requires authentication via a cookie named `token`.
+        - The `token` cookie should contain a valid JWT (JSON Web Token).
+
+        **Event Listening:**
+        - Upon a successful connection, the client must subscribe to the `task-updates` event to receive updates about tasks.
+
+      responses:
+        '101':
+          description: Switching Protocols - WebSocket connection established
+
 components:
   securitySchemes:
     cookieAuth:

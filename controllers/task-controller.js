@@ -10,6 +10,7 @@ const moment = require('moment');
 const redis = require('../config/redis.config');
 const { USER_ROLES } = require('../constants/user-constant');
 const { pagination } = require('../utils/pagination');
+const { sendEvent } = require('../utils/socket');
 
 exports.createTask = async (req, res) => {
   try {
@@ -25,6 +26,14 @@ exports.createTask = async (req, res) => {
     });
 
     await redis.deleteKeysByPattern('task_list_*');
+
+    if (userId) {
+      sendEvent('task-updates', userId.toString(), {
+        type: 'newTask',
+        msg: 'New Task Assigned',
+        task,
+      });
+    }
 
     successResponse(res, 'Task created successfully', task);
   } catch (error) {
@@ -71,6 +80,20 @@ exports.updateTask = async (req, res) => {
     const updateCache = redis.setKey(`task_${id}`, updatedTask, 60 * 60);
 
     await Promise.allSettled([deleteCache, updateCache]);
+
+    if (req.user.role === USER_ROLES.USER) {
+      sendEvent('task-updates', updatedTask?.createdBy?._id?.toString(), {
+        type: 'taskUpdated',
+        msg: 'Task updated',
+        task: updatedTask,
+      });
+    } else {
+      sendEvent('task-updates', updatedTask?.assignedTo?._id?.toString(), {
+        type: 'taskUpdated',
+        msg: 'Task updated',
+        task: updatedTask,
+      });
+    }
 
     successResponse(res, 'Task updated successfully', updatedTask);
   } catch (error) {
@@ -220,6 +243,12 @@ exports.assignUserToTask = async (req, res) => {
 
     await Promise.allSettled([deleteCache, updateCache]);
 
+    sendEvent('task-updates', userId.toString(), {
+      type: 'newTask',
+      msg: 'New Task Assigned',
+      task,
+    });
+
     successResponse(res, 'User assigned to task successfully');
   } catch (error) {
     internalServerErrorResponse(res, error);
@@ -230,27 +259,38 @@ exports.unassignUserFromTask = async (req, res) => {
   try {
     const { taskId } = req.body;
 
-    const task = await Task.findOneAndUpdate(
+    const taskExists = await Task.findOne(
       {
         _id: taskId,
         assignedTo: { $exists: true },
         status: { $ne: TASK_STATUS.COMPLETED },
       },
-      { $unset: { assignedTo: '' } },
-      { new: true },
-    ).populate([{ path: 'createdBy', select: 'username email' }]);
+      { _id: 1, assignedTo: 1 },
+    );
 
-    if (!task) {
+    if (!taskExists) {
       return badRequestErrorResponse(
         res,
         'Either user not assigned or task already completed.',
       );
     }
 
+    const task = await Task.findByIdAndUpdate(
+      taskExists._id,
+      { $unset: { assignedTo: '' } },
+      { new: true },
+    ).populate([{ path: 'createdBy', select: 'username email' }]);
+
     const deleteCache = redis.deleteKeysByPattern(`task_list_*`);
     const updateCache = redis.setKey(`task_${taskId}`, task, 60 * 60);
 
     await Promise.allSettled([deleteCache, updateCache]);
+
+    sendEvent('task-updates', taskExists?.assignedTo?.toString(), {
+      type: 'taskRemoved',
+      msg: 'Task unassigned',
+      task,
+    });
 
     successResponse(res, 'User unassigned from task successfully');
   } catch (error) {

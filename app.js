@@ -1,3 +1,6 @@
+const Logger = require('./utils/winston');
+const logger = new Logger();
+global.logger = logger;
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -5,20 +8,18 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const routes = require('./routes');
-const Logger = require('./utils/winston');
 const package = require('./package.json');
 const cookieParser = require('cookie-parser');
 const swagger = require('./utils/swagger');
 const { createAdminOnServerStart } = require('./controllers/auth-controller');
 const http = require('http');
+const { initializeSocket } = require('./utils/socket');
 
 const app = express();
 const server = http.createServer(app);
+initializeSocket(server);
 
 require('dotenv').config();
-
-const logger = new Logger();
-global.logger = logger;
 
 app.use(cors());
 app.use(helmet());
