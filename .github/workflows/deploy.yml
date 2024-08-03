@@ -1,0 +1,39 @@
+name: Deploy to Server
+on:
+  push:
+    branches: ['master']
+    paths-ignore:
+      - '**/*.md'
+      - '**/*.gitignore'
+      - '**/*.prettierrc'
+      - '**/.env*'
+  workflow_dispatch:
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up SSH
+        uses: actions/setup-ssh@v1
+        with:
+          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
+
+      - name: Decode PEM key and save to file
+        run: |
+          echo "${{ secrets.EC2_SSH_KEY }}" | base64 --decode > /tmp/your-key.pem
+          chmod 600 /tmp/your-key.pem
+
+      - name: Sync files to EC2
+        run: |
+          rsync -avz -e "ssh -i /tmp/your-key.pem -o StrictHostKeyChecking=no" --exclude='.git' . ec2-user@${{secrets.EC2_PUBLIC_DNS}}:/home/ec2-user/lens-corp-assignment
+
+      - name: SSH into EC2 and deploy with Docker Compose
+        run: |
+          ssh -i /tmp/your-key.pem -o StrictHostKeyChecking=no ec2-user@${{secrets.EC2_PUBLIC_DNS}} << 'EOF'
+            cd /home/ec2-user/lens-corp-assignment
+            docker-compose pull
+            docker-compose up -d --remove-orphans
+          EOF
