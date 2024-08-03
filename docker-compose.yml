@@ -6,6 +6,7 @@ services:
     volumes:
       - .:/usr/src/app
       - /usr/src/app/node_modules
+      - app_logs:/app/logs
     ports:
       - '5001:5001'
     depends_on:
@@ -40,3 +41,4 @@ services:
 volumes:
   mongo-data:
   redis-data:
+  logs:
