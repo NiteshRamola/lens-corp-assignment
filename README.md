@@ -61,6 +61,13 @@ The following environment variables need to be set for the application to run pr
 - `JWT_EXPIRE`: Expiration time for JWT (e.g., 1h, 7d).
 - `JWT_REFRESH_SECRET`: Secret key for signing refresh tokens.
 - `JWT_REFRESH_EXPIRE`: Expiration time for refresh tokens (e.g., 7d, 30d).
+- `TWILIO_AUTH_TOKEN`: Authentication token for Twilio API, used for sending SMS messages.
+- `TWILIO_ACCOUNT_SID`: Account SID for Twilio API, required for accessing Twilio services.
+- `TWILIO_PHONE_NUMBER`: Phone number associated with your Twilio account, used as the sender for SMS messages.
+- `AWS_ACCESS_KEY_ID`: AWS access key ID, used for accessing AWS services.
+- `AWS_SECRET_ACCESS_KEY`: AWS secret access key, used for securely connecting to AWS services.
+- `AWS_REGION`: AWS region (e.g., ap-south-1) where your AWS resources are located.
+- `EMAIL_SENDER_ID`: Email address used for sending emails via AWS SES (Simple Email Service).
 
 ### Running the Application
 
