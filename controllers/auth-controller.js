@@ -37,7 +37,7 @@ const sendToken = async (res, user, msg) => {
   });
 };
 
-const createUser = async (email, username, password, role) => {
+const createUser = async (email, username, password, phone, role) => {
   try {
     const userExists = await User.findOne({
       $or: [{ email: email }, { username: username }],
@@ -58,6 +58,7 @@ const createUser = async (email, username, password, role) => {
     const user = await User.create({
       username,
       email,
+      phone,
       password,
       role,
     });
@@ -79,6 +80,7 @@ exports.createAdminOnServerStart = async () => {
         username: 'Admin',
         email: 'admin@gmail.com',
         password: 'Admin@123',
+        phone: '999999999',
         role: USER_ROLES.ADMIN,
       });
 
@@ -97,9 +99,9 @@ exports.createAdminOnServerStart = async () => {
 
 exports.register = async (req, res) => {
   try {
-    const { username, email, password } = req.body;
+    const { username, email, phone, password } = req.body;
 
-    const createdUser = await createUser(email, username, password);
+    const createdUser = await createUser(email, username, password, phone);
 
     if (!createdUser.success) {
       return badRequestErrorResponse(res, createdUser.errorMessage);
@@ -151,12 +153,13 @@ exports.logout = async (req, res) => {
 
 exports.createManager = async (req, res) => {
   try {
-    const { username, email, password } = req.body;
+    const { username, email, phone, password } = req.body;
 
     const createdUser = await createUser(
       email,
       username,
       password,
+      phone,
       USER_ROLES.MANAGER,
     );
 

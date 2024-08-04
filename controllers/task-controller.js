@@ -12,10 +12,33 @@ const redis = require('../config/redis.config');
 const { USER_ROLES } = require('../constants/user-constant');
 const { pagination } = require('../utils/pagination');
 const { sendEvent } = require('../utils/socket');
+const {
+  newTaskAssignSMS,
+  taskUpdateSMS,
+  taskUnAssignSMS,
+  taskDueReminderSMS,
+} = require('../utils/smsTemplates');
+const {
+  newTaskAssignEmail,
+  taskUpdateEmail,
+  taskUnAssignEmail,
+  taskDueReminderEmail,
+} = require('../utils/emailTemplates');
+const sendEmail = require('../config/email.config');
+const sendMessage = require('../config/sms.config');
 
 exports.createTask = async (req, res) => {
   try {
     const { title, description, dueDate, priority, userId } = req.body;
+
+    let user;
+    if (userId) {
+      user = await User.findById(userId).select('username email phone');
+
+      if (!user) {
+        return badRequestErrorResponse(res, 'Invalid user id');
+      }
+    }
 
     const task = await Task.create({
       title,
@@ -34,6 +57,27 @@ exports.createTask = async (req, res) => {
         msg: 'New Task Assigned',
         task,
       });
+
+      const emailTemplate = newTaskAssignEmail(
+        user.username,
+        title,
+        description,
+        moment(dueDate).format('DD-MM-YYYY'),
+        priority,
+        TASK_STATUS.PENDING,
+      );
+
+      const smsTemplate = newTaskAssignSMS(
+        user.username,
+        title,
+        description,
+        moment(dueDate).format('DD-MM-YYYY'),
+        priority,
+        TASK_STATUS.PENDING,
+      );
+
+      sendEmail(user.email, 'New Task Assigned', emailTemplate);
+      sendMessage(smsTemplate, user.phone);
     }
 
     successResponse(res, 'Task created successfully', task);
@@ -69,8 +113,8 @@ exports.updateTask = async (req, res) => {
     const updatedTask = await Task.findOneAndUpdate(query, dataToUpdate, {
       new: true,
     }).populate([
-      { path: 'createdBy', select: 'username email' },
-      { path: 'assignedTo', select: 'username email' },
+      { path: 'createdBy', select: 'username email phone' },
+      { path: 'assignedTo', select: 'username email phone' },
     ]);
 
     if (!updatedTask) {
@@ -89,12 +133,33 @@ exports.updateTask = async (req, res) => {
         msg: 'Task updated',
         task: updatedTask,
       });
-    } else {
+    } else if (updatedTask?.assignedTo?._id) {
       sendEvent('task-updates', updatedTask?.assignedTo?._id?.toString(), {
         type: 'taskUpdated',
         msg: 'Task updated',
         task: updatedTask,
       });
+
+      const emailTemplate = taskUpdateEmail(
+        updatedTask?.assignedTo?.username,
+        updatedTask.title,
+        updatedTask.description,
+        moment(updatedTask.dueDate).format('DD-MM-YYYY'),
+        updatedTask.priority,
+        updatedTask.status,
+      );
+
+      const smsTemplate = taskUpdateSMS(
+        updatedTask?.assignedTo?.username,
+        updatedTask.title,
+        updatedTask.description,
+        moment(updatedTask.dueDate).format('DD-MM-YYYY'),
+        updatedTask.priority,
+        updatedTask.status,
+      );
+
+      sendEmail(updatedTask?.assignedTo?.email, 'Task Updated', emailTemplate);
+      sendMessage(smsTemplate, updatedTask?.assignedTo?.phone);
     }
 
     successResponse(res, 'Task updated successfully', updatedTask);
@@ -123,8 +188,8 @@ exports.getTaskById = async (req, res) => {
     }
 
     const task = await Task.findOne(query).populate([
-      { path: 'createdBy', select: 'username email' },
-      { path: 'assignedTo', select: 'username email' },
+      { path: 'createdBy', select: 'username email phone' },
+      { path: 'assignedTo', select: 'username email phone' },
     ]);
 
     if (!task) {
@@ -232,8 +297,8 @@ exports.assignUserToTask = async (req, res) => {
       { assignedTo: userId },
       { new: true },
     ).populate([
-      { path: 'createdBy', select: 'username email' },
-      { path: 'assignedTo', select: 'username email' },
+      { path: 'createdBy', select: 'username email phone' },
+      { path: 'assignedTo', select: 'username email phone' },
     ]);
 
     if (!task) {
@@ -252,6 +317,27 @@ exports.assignUserToTask = async (req, res) => {
       task,
     });
 
+    const emailTemplate = newTaskAssignEmail(
+      task?.assignedTo?.username,
+      task.title,
+      task.description,
+      moment(task.dueDate).format('DD-MM-YYYY'),
+      task.priority,
+      task.status,
+    );
+
+    const smsTemplate = newTaskAssignSMS(
+      task?.assignedTo?.username,
+      task.title,
+      task.description,
+      moment(task.dueDate).format('DD-MM-YYYY'),
+      task.priority,
+      task.status,
+    );
+
+    sendEmail(task?.assignedTo?.email, 'New Task Assigned', emailTemplate);
+    sendMessage(smsTemplate, task?.assignedTo?.phone);
+
     successResponse(res, 'User assigned to task successfully');
   } catch (error) {
     internalServerErrorResponse(res, error);
@@ -262,14 +348,11 @@ exports.unassignUserFromTask = async (req, res) => {
   try {
     const { taskId } = req.body;
 
-    const taskExists = await Task.findOne(
-      {
-        _id: taskId,
-        assignedTo: { $exists: true },
-        status: { $ne: TASK_STATUS.COMPLETED },
-      },
-      { _id: 1, assignedTo: 1 },
-    );
+    const taskExists = await Task.findOne({
+      _id: taskId,
+      assignedTo: { $exists: true },
+      status: { $ne: TASK_STATUS.COMPLETED },
+    }).populate([{ path: 'assignedTo', select: 'username email phone' }]);
 
     if (!taskExists) {
       return badRequestErrorResponse(
@@ -282,7 +365,7 @@ exports.unassignUserFromTask = async (req, res) => {
       taskExists._id,
       { $unset: { assignedTo: '' } },
       { new: true },
-    ).populate([{ path: 'createdBy', select: 'username email' }]);
+    ).populate([{ path: 'createdBy', select: 'username email phone' }]);
 
     const deleteCache = redis.deleteKeysByPattern(`task_list_*`);
     const deleteAnalyticsCache = redis.deleteKeysByPattern(`task_analytics_*`);
@@ -290,11 +373,36 @@ exports.unassignUserFromTask = async (req, res) => {
 
     await Promise.allSettled([deleteCache, deleteAnalyticsCache, updateCache]);
 
-    sendEvent('task-updates', taskExists?.assignedTo?.toString(), {
+    sendEvent('task-updates', taskExists?.assignedTo?._id?.toString(), {
       type: 'taskRemoved',
       msg: 'Task unassigned',
       task,
     });
+
+    const emailTemplate = taskUnAssignEmail(
+      taskExists?.assignedTo?.username,
+      taskExists.title,
+      taskExists.description,
+      moment(taskExists.dueDate).format('DD-MM-YYYY'),
+      taskExists.priority,
+      taskExists.status,
+    );
+
+    const smsTemplate = taskUnAssignSMS(
+      taskExists?.assignedTo?.username,
+      taskExists.title,
+      taskExists.description,
+      moment(taskExists.dueDate).format('DD-MM-YYYY'),
+      taskExists.priority,
+      taskExists.status,
+    );
+
+    sendEmail(
+      taskExists?.assignedTo?.email,
+      'New Task Assigned',
+      emailTemplate,
+    );
+    sendMessage(smsTemplate, taskExists?.assignedTo?.phone);
 
     successResponse(res, 'User unassigned from task successfully');
   } catch (error) {
@@ -385,5 +493,43 @@ exports.getTaskAnalytics = async (req, res) => {
     successResponse(res, 'Task analytics fetched', data);
   } catch (error) {
     internalServerErrorResponse(res, error);
+  }
+};
+
+exports.sendTaskDueDateReminders = async () => {
+  try {
+    const tasks = Task.find({
+      status: { $in: [TASK_STATUS.PENDING, TASK_STATUS.IN_PROGRESS] },
+      dueDate: { $gte: moment().startOf('day'), $lte: moment().endOf('day') },
+    })
+      .populate([{ path: 'assignedTo', select: 'username email phone' }])
+      .cursor();
+
+    for await (let task of tasks) {
+      const emailTemplate = taskDueReminderEmail(
+        task?.assignedTo?.username,
+        task.title,
+        task.description,
+        moment(task.dueDate).format('DD-MM-YYYY'),
+        task.priority,
+        task.status,
+      );
+
+      const smsTemplate = taskDueReminderSMS(
+        task?.assignedTo?.username,
+        task.title,
+        task.description,
+        moment(task.dueDate).format('DD-MM-YYYY'),
+        task.priority,
+        task.status,
+      );
+
+      sendEmail(task?.assignedTo?.email, 'New Task Assigned', emailTemplate);
+      sendMessage(smsTemplate, task?.assignedTo?.phone);
+    }
+
+    logger.log('Task due date reminders sent successfully');
+  } catch (error) {
+    logger.log(`Error from sendTaskDueDateReminders: ${error}`, 'error');
   }
 };

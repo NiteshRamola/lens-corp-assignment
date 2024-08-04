@@ -48,12 +48,15 @@ paths:
               required:
                 - username
                 - email
+                - phone
                 - password
               properties:
                 username:
                   type: string
                 email:
                   type: string
+                phone:
+                  type: number
                 password:
                   type: string
       responses:
@@ -125,12 +128,15 @@ paths:
               required:
                 - username
                 - email
+                - phone
                 - password
               properties:
                 username:
                   type: string
                 email:
                   type: string
+                phone:
+                  type: number
                 password:
                   type: string
       responses:

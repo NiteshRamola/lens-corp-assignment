@@ -16,7 +16,7 @@ exports.getProfile = async (req, res) => {
     }
 
     const user = await User.findById(req.user._id).populate([
-      { path: 'managerId', select: 'username email' },
+      { path: 'managerId', select: 'username email phone' },
     ]);
 
     await redis.setKey(`user_${req.user._id}`, user, 60 * 60);
@@ -43,7 +43,7 @@ exports.getUserById = async (req, res) => {
     }
 
     const user = await User.findOne(query).populate([
-      { path: 'managerId', select: 'username email' },
+      { path: 'managerId', select: 'username email phone' },
     ]);
 
     if (!user) {
@@ -121,7 +121,7 @@ exports.assignManager = async (req, res) => {
       },
       { managerId },
       { new: true },
-    ).populate([{ path: 'managerId', select: 'username email' }]);
+    ).populate([{ path: 'managerId', select: 'username email phone' }]);
 
     if (!user) {
       return badRequestErrorResponse(

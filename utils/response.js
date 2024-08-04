@@ -1,7 +1,9 @@
 const { validationResult } = require('express-validator');
 
 exports.badRequestErrorResponse = (res, msg) => {
-  logger.log(`Bad Request Error: ${msg}`);
+  logger.log(
+    `Bad Request Error: ${typeof msg === 'string' ? msg : JSON.stringify(msg)}`,
+  );
 
   return res.status(400).json({
     success: false,

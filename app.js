@@ -71,6 +71,11 @@ app.use((req, res, next) => {
   notFoundErrorResponse(res, 'Invalid Endpoint');
 });
 
+//cron job
+require('./utils/cron');
+
+// exit handlers for graceful shutdown
+
 const exitHandler = require('./utils/exitHandler')(server);
 
 process.on('uncaughtException', exitHandler(1, 'Unexpected Error'));
