@@ -1,6 +1,7 @@
 services:
   app:
     image: node:20-alpine
+    restart: always
     container_name: node_app
     working_dir: /usr/src/app
     volumes:
@@ -13,17 +14,25 @@ services:
       - mongo
       - redis
     environment:
-      - PORT=5001
-      - MONGO_URI=mongodb://mongo:27017/task-manage
-      - REDIS_URL=redis://redis:6379
-      - JWT_SECRET=JWT_SECRET
-      - JWT_EXPIRE=1h
-      - JWT_REFRESH_SECRET=JWT_REFRESH_SECRET
-      - JWT_REFRESH_EXPIRE=7d
+      - PORT=${PORT}
+      - MONGO_URI=${MONGO_URI}
+      - REDIS_URL=${REDIS_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRE=${JWT_EXPIRE}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+      - JWT_REFRESH_EXPIRE=${JWT_REFRESH_EXPIRE}
+      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN}
+      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID}
+      - TWILIO_PHONE_NUMBER=${TWILIO_PHONE_NUMBER}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${AWS_REGION}
+      - EMAIL_SENDER_ID=${EMAIL_SENDER_ID}
     command: sh -c "npm install && npm start"
 
   mongo:
     image: mongo:latest
+    restart: always
     container_name: mongo_db
     ports:
       - '27018:27017'
@@ -32,6 +41,7 @@ services:
 
   redis:
     image: redis:latest
+    restart: always
     container_name: redis_server
     ports:
       - '6378:6379'
