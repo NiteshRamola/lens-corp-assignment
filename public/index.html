@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lens Corporation Assignment</title>
+    <style>
+      body {
+        font-family: 'Arial', sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f4f4f4;
+        text-align: center;
+      }
+      .container {
+        max-width: 900px;
+        margin: 50px auto;
+        padding: 20px;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        text-align: left;
+      }
+      h1,
+      h2 {
+        color: #333;
+      }
+      h2 {
+        border-bottom: 2px solid #007bff;
+        padding-bottom: 10px;
+        margin-top: 40px;
+      }
+      p {
+        font-size: 1.1em;
+        color: #666;
+        line-height: 1.6;
+      }
+      ul {
+        list-style-type: none;
+        padding: 0;
+      }
+      li {
+        margin: 10px 0;
+        font-size: 1.1em;
+      }
+      li strong {
+        color: #333;
+      }
+      a {
+        color: #007bff;
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+      .button {
+        display: inline-block;
+        padding: 10px 20px;
+        margin: 20px 0;
+        font-size: 1.1em;
+        color: #fff;
+        background-color: #007bff;
+        border: none;
+        border-radius: 5px;
+        text-decoration: none;
+        transition: background-color 0.3s ease;
+      }
+      .button:hover {
+        background-color: #0056b3;
+      }
+      code {
+        background-color: #f8f8f8;
+        border: 1px solid #e1e1e1;
+        border-radius: 4px;
+        display: block;
+        padding: 10px;
+        margin: 10px 0;
+        font-size: 1em;
+        overflow-x: auto;
+      }
+      pre {
+        margin: 20px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <a
+        href="https://lens-assignment.niteshramola.in/api-docs/"
+        target="_blank"
+        class="button"
+        style="float: right; margin-top: 20px"
+        >View API Documentation</a
+      >
+      <h1>Lens Corporation Assignment</h1>
+      <p>
+        This project is built with Node.js and Express, with MongoDB for the
+        database and Redis for caching. The project uses Docker Compose to run
+        the application along with MongoDB and Redis.
+      </p>
+
+      <h2>Testing Credentials</h2>
+      <ul>
+        <li>
+          <strong>Role:</strong> Admin<br />
+          <strong>Email:</strong> admin@gmail.com<br />
+          <strong>Password:</strong> Admin@123
+        </li>
+        <li>
+          <strong>Role:</strong> Manager<br />
+          <strong>Email:</strong> manager@yopmail.com<br />
+          <strong>Password:</strong> Manager@123
+        </li>
+        <li>
+          <strong>Role:</strong> User<br />
+          <strong>Email:</strong> user@yopmail.com<br />
+          <strong>Password:</strong> User@123
+        </li>
+      </ul>
+
+      <h2>Table of Contents</h2>
+      <ul>
+        <li><a href="#getting-started">Getting Started</a></li>
+        <li><a href="#prerequisites">Prerequisites</a></li>
+        <li><a href="#installation">Installation</a></li>
+        <li><a href="#environment-variables">Environment Variables</a></li>
+        <li><a href="#running-the-application">Running the Application</a></li>
+        <li><a href="#api-documentation">API Documentation</a></li>
+      </ul>
+
+      <h2 id="getting-started">Getting Started</h2>
+      <p>
+        These instructions will help you get a copy of the project up and
+        running on your local machine for development and testing purposes.
+      </p>
+
+      <h2 id="prerequisites">Prerequisites</h2>
+      <p>Make sure you have the following installed on your machine:</p>
+      <ul>
+        <li>
+          <a href="https://www.docker.com/get-started" target="_blank"
+            >Docker</a
+          >
+        </li>
+        <li>
+          <a href="https://docs.docker.com/compose/install/" target="_blank"
+            >Docker Compose</a
+          >
+        </li>
+        <li>
+          <a href="https://nodejs.org/" target="_blank">Node.js</a> (v16 or
+          higher)
+        </li>
+      </ul>
+
+      <h2 id="installation">Installation</h2>
+      <p>1. Clone the repository:</p>
+      <pre><code>git clone https://github.com/NiteshRamola/lens-corp-assignment.git
+cd lens-corp-assignment</code></pre>
+      <p>2. Install the dependencies:</p>
+      <pre><code>npm install</code></pre>
+
+      <h2 id="environment-variables">Environment Variables</h2>
+      <p>
+        The following environment variables need to be set for the application
+        to run properly:
+      </p>
+      <ul>
+        <li>
+          <strong>PORT:</strong> The port on which the application will run
+          (e.g., 5001).
+        </li>
+        <li>
+          <strong>MONGO_URI:</strong> The URI for connecting to the MongoDB
+          instance (e.g., mongodb://localhost:27017/testDb).
+        </li>
+        <li>
+          <strong>REDIS_URL:</strong> The URL for connecting to the Redis
+          instance (e.g., redis://localhost:6379).
+        </li>
+        <li>
+          <strong>JWT_SECRET:</strong> Secret key for signing JSON Web Tokens
+          (JWT).
+        </li>
+        <li>
+          <strong>JWT_EXPIRE:</strong> Expiration time for JWT (e.g., 1h, 7d).
+        </li>
+        <li>
+          <strong>JWT_REFRESH_SECRET:</strong> Secret key for signing refresh
+          tokens.
+        </li>
+        <li>
+          <strong>JWT_REFRESH_EXPIRE:</strong> Expiration time for refresh
+          tokens (e.g., 7d, 30d).
+        </li>
+        <li>
+          <strong>TWILIO_AUTH_TOKEN:</strong> Authentication token for Twilio
+          API, used for sending SMS messages.
+        </li>
+        <li>
+          <strong>TWILIO_ACCOUNT_SID:</strong> Account SID for Twilio API,
+          required for accessing Twilio services.
+        </li>
+        <li>
+          <strong>TWILIO_PHONE_NUMBER:</strong> Phone number associated with
+          your Twilio account, used as the sender for SMS messages.
+        </li>
+        <li>
+          <strong>AWS_ACCESS_KEY_ID:</strong> AWS access key ID, used for
+          accessing AWS services.
+        </li>
+        <li>
+          <strong>AWS_SECRET_ACCESS_KEY:</strong> AWS secret access key, used
+          for securely connecting to AWS services.
+        </li>
+        <li>
+          <strong>AWS_REGION:</strong> AWS region (e.g., ap-south-1) where your
+          AWS resources are located.
+        </li>
+        <li>
+          <strong>EMAIL_SENDER_ID:</strong> Email address used for sending
+          emails via AWS SES (Simple Email Service).
+        </li>
+      </ul>
+
+      <h2 id="running-the-application">Running the Application</h2>
+      <p>1. Start the application with Docker Compose:</p>
+      <pre><code>docker-compose up --build</code></pre>
+      <p>
+        2. The application will be running on
+        <strong>http://localhost:5001</strong> by default.
+      </p>
+
+      <h2 id="api-documentation">API Documentation</h2>
+      <p>
+        The API documentation is available at
+        <strong>http://localhost:5001/api-docs</strong> by default.
+      </p>
+
+      <a
+        href="https://lens-assignment.niteshramola.in/api-docs/"
+        target="_blank"
+        class="button"
+        >Live API Documentation</a
+      >
+    </div>
+  </body>
+</html>

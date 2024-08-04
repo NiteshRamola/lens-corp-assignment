@@ -15,6 +15,7 @@ const { createAdminOnServerStart } = require('./controllers/auth-controller');
 const http = require('http');
 const { initializeSocket } = require('./utils/socket');
 const { notFoundErrorResponse } = require('./utils/response');
+const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
@@ -54,6 +55,12 @@ app.use(limiter);
 swagger(app);
 
 app.use('/api', routes);
+
+app.use(express.static(path.join(__dirname, 'public')));
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 app.get('/health', (req, res) => {
   res.status(200).send({
