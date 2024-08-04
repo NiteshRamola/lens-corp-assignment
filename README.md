@@ -7,11 +7,11 @@ This project is built with Node.js and Express, with MongoDB for the database an
 ```sh
 #Testing credentials
 
-Role     Email             Password
+Role     Email                Password
 
-Admin    admin@gmail.com   Admin@123
-Manager  nitesh@gmail.com  string
-User     ramola@gmail.com  string
+Admin    admin@gmail.com      Admin@123
+Manager  manager@yopmail.com  Manager@123
+User     user@yopmail.com     User@123
 ```
 
 ## Table of Contents
