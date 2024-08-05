@@ -1,7 +1,7 @@
 const schedule = require('node-schedule');
 const { sendTaskDueDateReminders } = require('../controllers/task-controller');
 
-schedule.scheduleJob('* * * * *', () => {
+schedule.scheduleJob('0 0 * * *', () => {
   try {
     logger.log('Running Task due date reminder at 12 AM');
 
